@@ -4,7 +4,7 @@ import {useUser} from "@clerk/nextjs";
 import Image from "next/image";
 import { BotIcon, Loader2Icon } from "lucide-react";
 import Markdown from "react-markdown";
-import { Message } from "./Chat";
+import { Message } from "./Quiz";
 
 function ChatMessage({message}: {message: Message}) {
     const isHuman = message.role === "human";

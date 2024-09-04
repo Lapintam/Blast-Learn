@@ -15,6 +15,7 @@ import { PineconeConflictError } from "@pinecone-database/pinecone/dist/errors";
 import {Index, RecordMetadata} from "@pinecone-database/pinecone"
 import { adminDb } from "@/firebaseAdmin";
 import { auth } from "@clerk/nextjs/server";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 
 // Initialize the OpenAI model with API key and model name
@@ -162,6 +163,7 @@ export async function generateEmbeddingsInPineconeVectorStore(docId: string) {
     }
 }
 
+// Modify the generateLangchainCompletion function
 const generateLangchainCompletion = async (docId: string, question: string) => {
     let pineconeVectorStore;
 
@@ -176,61 +178,35 @@ const generateLangchainCompletion = async (docId: string, question: string) => {
     // Fetch the chat history from the database
     const chatHistory = await fetchMessagesFromDB(docId);
 
-    // Define a prompt template for generating search queries based on conversation history
+    // Define a prompt template for generating quiz questions
     console.log("--- Defining a prompt template... ---");
-    const historyAwarePrompt = ChatPromptTemplate.fromMessages([
-        ...chatHistory, // Insert the actual chat history here
-        ["user", "{input}"],
-        [
-            "user",
-            "You are a helpful and knowledgable teacher, and based on the input you will generate quiz questions related to the input, wait for an answer, then assess whether the answer is correct and repeat. All questions should be unique.",
-        ],
+    const quizPrompt = ChatPromptTemplate.fromMessages([
+        ["system", "You are a quiz generator. Create a unique multiple-choice question based on the following context:\n\n{context}\n\nProvide the question, four answer options (A, B, C, D), the correct answer letter, and a brief explanation of the correct answer. Format your response as a JSON object with the following structure:\n\n{{\n  \"question\": \"...\",\n  \"options\": {{\n    \"A\": \"...\",\n    \"B\": \"...\",\n    \"C\": \"...\",\n    \"D\": \"...\"\n  }},\n  \"correctAnswer\": \"...\",\n  \"explanation\": \"...\"\n}}"],
+        ["human", "{input}"],
     ]);
 
-    //Create a history-aware retriever chain that uses the model, retriever, and prompt
-    console.log("--- Creating a history-aware retriever chain... ---");
-    const historyAwareRetrieverChain = await createHistoryAwareRetriever({
+    // Create a chain to generate the quiz question
+    console.log("--- Creating the quiz generation chain... ---");
+    const quizGenerationChain = await createStuffDocumentsChain({
         llm: model,
-        retriever,
-        rephrasePrompt: historyAwarePrompt,
+        prompt: quizPrompt,
     });
 
-    // Define a prompt template for answering questions based on retrieved context
-    console.log("--- Defining a prompt template for answering questions...---");
-    const historyAwareRetrievalPrompt = ChatPromptTemplate.fromMessages([
-        [
-            "system",
-            "Refine your questions based on the below context:\n\n{context}",
-        ],
-
-        ...chatHistory, // Insert the actual chat history here
-
-        ["user", "{input}"],
-    ]);
-
-    // Create a chain to combine the retrieved documents into a coherent response
-    console.log("--- Creating a document combining chain... ---");
-    const historyAwareCombineDocsChain = await createStuffDocumentsChain({
-        llm: model,
-        prompt: historyAwareRetrievalPrompt,
-    });
-
-    // Create the main retrieval chain that combines the history-aware retriever and document combining chains
+    // Create the main retrieval chain
     console.log("--- Creating the main retrieval chain... ---");
-    const conversationalRetrievalChain = await createRetrievalChain({
-        retriever: historyAwareRetrieverChain,
-        combineDocsChain: historyAwareCombineDocsChain,
+    const quizRetrievalChain = await createRetrievalChain({
+        retriever: retriever,
+        combineDocsChain: quizGenerationChain,
     });
 
-    console.log("--- Running the chain with a sample conversation... ---");
-    const reply = await conversationalRetrievalChain.invoke({
-        chat_history: chatHistory,
-        input: question,
+    console.log("--- Generating a quiz question... ---");
+    const response = await quizRetrievalChain.invoke({
+        input: "Generate a multiple-choice question with explanation",
     });
 
-    //Print the result to the console
-    console.log(reply.answer)
-    return reply.answer;
+    // Parse the response into a structured quiz question object
+    const quizQuestion = JSON.parse(response.answer);
+    return quizQuestion;
 };
 
 // Export the model and run the function

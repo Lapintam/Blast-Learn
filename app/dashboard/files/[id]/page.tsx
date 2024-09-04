@@ -1,9 +1,9 @@
-import Chat from "@/components/Chat";
+import Quiz from "@/components/Quiz";
 import PdfView from "@/components/PdfView";
 import { adminDb } from "@/firebaseAdmin";
 import { auth } from "@clerk/nextjs/server";
 
-async function ChatToFilePage({
+async function QuizFilePage({
     params: {id},
 }: {
     params: {
@@ -26,8 +26,8 @@ async function ChatToFilePage({
    <div className="grid lg:grid-cols-5 h-full overflow-hidden">
         {/* Right */}
           <div className="col-span-5 lg:col-span-2 overflow-y-auto">
-            {/* Chat */}
-            <Chat id= {id}/>
+            {/* Quiz */}
+            <Quiz id= {id}/>
           </div>
         {/* Left */}
           <div className="col-span-5 lg:col-span-3 bg-gray-100 border-r-2 lg:border-[#6092C6]-600 lg:-order-1 overflow-auto">
@@ -37,4 +37,4 @@ async function ChatToFilePage({
     </div>
   );
 }  
-export default ChatToFilePage
+export default QuizFilePage

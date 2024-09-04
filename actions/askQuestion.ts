@@ -2,73 +2,68 @@
 
 import { adminDb } from "@/firebaseAdmin";
 import { auth } from "@clerk/nextjs/server";
-// import { generateLangchainCompletion } from "@/lib/langchain/langchain";
-import { Message } from "@/components/Chat";
 import { generateLangchainCompletion } from "@/lib/langchain";
 
-const PRO_LIMIT = 20;
-const FREE_LIMIT = 2;
+const PRO_LIMIT = 100;
+const FREE_LIMIT = 3;
 
 export async function askQuestion(id: string, question: string) {
     auth().protect();
     const { userId } = await auth();
 
-    const chatRef = adminDb
+    const quizRef = adminDb
         .collection("users")
         .doc(userId!)
         .collection("files")
         .doc(id)
-        .collection("chat");
+        .collection("quiz");
 
-    // check how many user messages are in the chat
-    const chatSnapshot = await chatRef.get();
-    const userMessages = chatSnapshot.docs.filter(
-        (doc) => doc.data().role === "human"
-    );
+    // check how many quiz questions are in the document
+    const quizSnapshot = await quizRef.get();
+    const quizCount = quizSnapshot.size;
 
-    // Check membership limits for messages in a document
+    // Check membership limits for quizzes in a document
     const userRef = await adminDb.collection("users").doc(userId!).get();
 
-    //tomorrow limit the PRO/FREE users OR can use for billing purposes.
-
-    // Check if user is on FREE plan and has asked more than FREE number of questions
+    // Check if user is on FREE plan and has reached the FREE limit
     if (!userRef.data()?.hasActiveMembership) {
-        if (userMessages.length >= FREE_LIMIT) {
+        if (quizCount >= FREE_LIMIT) {
             return {
                 success: false,
-                message: `You'll need to upgrade to PRO to ask more than ${FREE_LIMIT} questions!`,
+                message: `You'll need to upgrade to PRO to generate more than ${FREE_LIMIT} quizzes!`,
             };
         }
     }
 
-    // check if user is on PRO plan and has asked more than 100 questions
+    // check if user is on PRO plan and has reached the PRO limit
     if (userRef.data()?.hasActiveMembership) {
-        if (userMessages.length >= PRO_LIMIT) {
+        if (quizCount >= PRO_LIMIT) {
             return {
                 success: false,
-                message: `You've reached the PRO limit of ${PRO_LIMIT} questions per document!`,
+                message: `You've reached the PRO limit of ${PRO_LIMIT} quizzes per document!`,
             };
         }
     }
 
-    const userMessage: Message = {
-        role: "human",
-        message: question,
-        createdAt: new Date(),
+    try {
+        // Generate the quiz question
+        const quizQuestion = await generateLangchainCompletion(id, question);
+
+        // Store the quiz question in Firestore
+        await quizRef.add({
+            ...quizQuestion,
+            createdAt: new Date(),
+        });
+
+        return {
+            success: true,
+            quizQuestion,
+        };
+    } catch (err) {
+        console.error("Error generating question:", err);
+        return {
+            success: false,
+            message: "An error occurred while generating the question",
+        };
     }
-
-    await chatRef.add(userMessage);
-
-    // Generate the AI response
-    const reply = await generateLangchainCompletion(id, question);
-
-    const aiMessage: Message = {
-        role: "ai",
-        message: reply,
-        createdAt: new Date(),
-    };
-
-    await chatRef.add(aiMessage);
-
-    return { success: true, message: null };
 }
