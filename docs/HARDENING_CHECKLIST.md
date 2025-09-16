@@ -1,0 +1,33 @@
+# Production Hardening Checklist (Healthcare / HIPAA-aware)
+
+- Identity & Access
+  - Enforce SSO via ALB OIDC (Azure AD/Okta) for all app access
+  - IAM least-privilege roles for CI/CD, EC2, SSM, CW, S3, EBS snapshots
+  - MFA for all human IAM users (or eliminate with SSO-only)
+- Network
+  - Private subnets for app, no public IPs on EC2
+  - Security Groups: ALB 80/443 from internet, EC2 3000 from ALB SG only
+  - VPC Flow Logs enabled to CloudWatch Logs
+- Compute
+  - Harden AMIs (CIS Ubuntu baseline or Bottlerocket)
+  - Patch management via SSM Patch Manager; weekly maintenance window
+  - IMDSv2 required, block IMDSv1
+- Storage & Data
+  - EBS encryption with customer-managed KMS key; snapshot lifecycle policy
+  - Postgres (RDS/Aurora) with encryption at rest, TLS in transit
+  - Pinecone: project-level API keys scoped per-tenant; rotate quarterly
+  - S3 (if used): block public access, bucket policies, TLS-only
+- Secrets
+  - Store secrets in AWS SSM Parameter Store or Secrets Manager
+  - Rotate Stripe, Pinecone, OpenAI keys; audit via AWS Config
+- Observability
+  - CloudWatch Agent for logs/metrics; alarms on 5xx, CPU, memory, disk
+  - Centralized audit logs for admin actions and model usage
+- App Security
+  - CSP headers, secure cookies, SameSite=strict, CSRF on form posts
+  - Input validation/encoding; PDF parsing sandboxed in worker
+  - Rate limiting on ingest and chat endpoints
+- Compliance Ops
+  - BAA with cloud vendors; vendor risk assessment
+  - Quarterly penetration tests; dependency scanning in CI
+  - Backups tested quarterly; disaster recovery runbooks
