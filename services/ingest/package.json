@@ -1,0 +1,25 @@
+{
+  "name": "@ironsight/ingest-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --project tsconfig.json",
+    "start": "node --enable-source-maps dist/index.js"
+  },
+  "dependencies": {
+    "@fastify/sensible": "^5.1.0",
+    "@ironsight/common": "file:../../packages/common",
+    "@ironsight/db": "file:../../packages/db",
+    "@ironsight/vectors": "file:../../packages/vectors",
+    "fastify": "^4.27.0",
+    "pino": "^9.3.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4.15.7",
+    "typescript": "^5"
+  }
+}

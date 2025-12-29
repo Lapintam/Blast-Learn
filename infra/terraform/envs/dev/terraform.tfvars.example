@@ -1,0 +1,30 @@
+project            = "ironsight"
+environment        = "dev"
+region             = "us-east-1"
+vpc_cidr           = "10.20.0.0/16"
+azs                = ["us-east-1a", "us-east-1b", "us-east-1c"]
+acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/abc"
+rag_bucket_name    = "ironsight-dev-rag"
+web_image          = "123456789012.dkr.ecr.us-east-1.amazonaws.com/ironsight/web:latest"
+web_hostnames      = ["dev.ironsight.example.com"]
+web_environment = {
+  NODE_ENV             = "production"
+  NEXTAUTH_URL         = "https://dev.ironsight.example.com"
+  NEXT_PUBLIC_GATEWAY_URL = "https://api.dev.ironsight.example.com"
+}
+web_desired_count      = 2
+db_username            = "ironsight"
+db_password            = "change-me"
+ollama_instance_profile = "ironsight-ollama-profile"
+ollama_user_data       = <<-EOT
+#!/bin/bash
+curl -fsSL https://ollama.ai/install.sh | sh
+systemctl enable ollama
+systemctl start ollama
+EOT
+ssm_config_prefix     = "/ironsight/dev"
+cognito_callback_urls = ["https://dev.ironsight.example.com/api/auth/callback"]
+cognito_logout_urls   = ["https://dev.ironsight.example.com/logout"]
+tags = {
+  owner = "platform"
+}

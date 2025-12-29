@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "ESNext",
+    "lib": ["es2021"],
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ironsight/common": ["packages/common/src/index.ts"],
+      "@ironsight/common/*": ["packages/common/src/*"],
+      "@ironsight/db": ["packages/db/src/index.ts"],
+      "@ironsight/db/*": ["packages/db/src/*"],
+      "@ironsight/auth": ["packages/auth/src/index.ts"],
+      "@ironsight/auth/*": ["packages/auth/src/*"],
+      "@ironsight/vectors": ["packages/vectors/src/index.ts"],
+      "@ironsight/vectors/*": ["packages/vectors/src/*"]
+    }
+  }
+}
