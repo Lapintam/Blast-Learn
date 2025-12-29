@@ -26,6 +26,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
+.env.*
 .env*.local
 
 # vercel
@@ -34,4 +36,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# secrets & credentials (NEVER commit these)
 service_key.json
+**/service_key.json
+*.pem
+*.key
+*-credentials.json
+*-service-account.json
+firebase-*.json
+google-*.json
+credentials.json
+
+# terraform secrets
+*.tfvars
+!*.tfvars.example
+.terraform/
+*.tfstate
+*.tfstate.*
