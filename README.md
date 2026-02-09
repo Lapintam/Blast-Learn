@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Blast Learn
+
+An AI-powered learning platform that transforms PDFs into interactive quiz experiences using Retrieval-Augmented Generation (RAG). Upload any document and Blast Learn generates contextual multiple-choice questions to reinforce understanding — grounded in the actual content of your files.
+
+This is a hosted, full-stack RAG application and part of my portfolio, building on the patterns and infrastructure established across my other projects.
+
+## Why Quizzing Works
+
+Blast Learn is built on the **testing effect**, a well-established finding in cognitive neuroscience showing that actively retrieving information through quizzing produces significantly stronger long-term retention than passive review alone. Peer-reviewed research — including Roediger & Karpicke (2006) in *Psychological Science* and Karpicke & Blunt (2011) in *Science* — demonstrates that frequent, low-stakes testing improves recall, deepens comprehension, and helps learners identify gaps in their understanding. Blast Learn applies this principle by generating targeted quizzes directly from your study material, turning every uploaded document into an active learning session.
+
+## How It Works
+
+1. **Upload a PDF** — drag and drop into the dashboard
+2. **Embeddings are generated** — the document is chunked, vectorized, and stored in Pinecone
+3. **Take a quiz** — the AI retrieves relevant sections from the document and generates targeted questions with explanations
+4. **Track progress** — quiz history is persisted per document
+
+## Tech Stack
+
+### Frontend
+- **Next.js 14** (App Router, React Server Components)
+- **React 18** with TypeScript
+- **Tailwind CSS** + **DaisyUI** for styling
+- **Radix UI** primitives (toast, slot)
+- **Lucide React** icons
+- **react-pdf** / **react-dropzone** for PDF viewing and upload
+
+### AI / RAG Pipeline
+- **LangChain** for orchestration (document loading, text splitting, prompt chaining)
+- **OpenAI GPT-4o** for question generation and conversational retrieval
+- **OpenAI Embeddings** for vector representation of document content
+- **Pinecone** as the vector database, with per-document namespace isolation
+
+### Backend & Data
+- **Firebase Firestore** for user data, document metadata, quiz history, and chat messages
+- **Firebase Storage** for PDF file hosting
+- **Firebase Admin SDK** for secure server-side operations
+- **Next.js Server Actions** for auth-protected mutations
+
+### Authentication & Payments
+- **Clerk** for user authentication, session management, and route protection
+- **Stripe** for subscription billing (free and pro tiers) with webhook-driven status sync
+
+### Infrastructure
+- **Vercel** for deployment
+- **pnpm** workspaces (monorepo with shared packages and microservices)
+- **Fastify** services for LLM, document ingestion, and billing
+- **Prisma** + **PostgreSQL** in shared database package
+- **OpenTelemetry** + **Pino** for observability and structured logging
+
+## Architecture
+
+```
+app/                    Next.js pages and API routes
+components/             React components (Quiz, PdfView, FileUploader, etc.)
+actions/                Server Actions (askQuestion, generateEmbeddings, etc.)
+hooks/                  Custom React hooks (useUpload, useSubscription)
+lib/                    LangChain config, Pinecone client, Stripe clients
+packages/               Shared packages (auth, db, vectors, common)
+services/               Microservices (llm, ingest, billing)
+```
+
+## Subscription Tiers
+
+| Feature              | Free       | Pro ($5.99/mo) |
+|----------------------|------------|----------------|
+| Documents            | 2          | 20             |
+| Max pages per PDF    | 10         | 100            |
+| Quizzes per document | 3          | 100            |
+| Document deletion    | No         | Yes            |
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requires environment variables for Clerk, OpenAI, Pinecone, Stripe, and Firebase. See `.env.local.example` for the full list.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Portfolio Context
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Blast Learn is one of several projects in my portfolio that demonstrate end-to-end product development — from AI integration and vector search to auth, payments, and deployment. Each project builds on shared infrastructure and lessons from the ones before it.
